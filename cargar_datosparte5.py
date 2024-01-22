@@ -1,28 +1,36 @@
-import requests
 import pandas as pd
 import numpy as np
 
-def procesar_y_guardar_datos_proyecto(url):
-    try:
-        # Realizar un GET request a la URL
-        response = requests.get(url)
-        response.raise_for_status()  # Verificar si la respuesta es exitosa
+def procesar_datos(dataframe):
+    # Verificar valores faltantes
+    if dataframe.isnull().values.any():
+        print("Existen valores faltantes.")
+        dataframe.dropna(inplace=True)
+        print("Valores faltantes eliminados.")
 
-        # Escribir la respuesta en un archivo CSV
-        with open('datos_proyecto.csv', 'w') as archivo_csv:
-            archivo_csv.write(response.text)
+    # Verificar filas repetidas
+    if dataframe.duplicated().any():
+        print("Existen filas repetidas.")
+        dataframe.drop_duplicates(inplace=True)
+        print("Filas repetidas eliminadas.")
 
-        print("Datos descargados y guardados en 'datos_descargados.csv'")
+    # Verificar y eliminar valores atípicos
+    q1 = dataframe.quantile(0.25)
+    q3 = dataframe.quantile(0.75)
+    iqr = q3 - q1
+    dataframe = dataframe[~((dataframe < (q1 - 1.5 * iqr)) | (dataframe > (q3 + 1.5 * iqr))).any(axis=1)]
+    print("Valores atípicos eliminados.")
 
-        # Cargar el archivo CSV en un DataFrame
-        df = pd.read_csv('datos_proyecto.csv')
+    # Crear columna de categoría por edades
+    bins = [0, 12, 19, 39, 59, np.inf]
+    labels = ['Niño', 'Adolescente', 'Jóvenes adulto', 'Adulto', 'Adulto mayor']
+    dataframe['Categoria Edades'] = pd.cut(dataframe['Edad'], bins=bins, labels=labels, right=False)
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error al descargar los datos: {e}")
-    except Exception as e:
-        print(f"Error al procesar el DataFrame: {e}")
+    # Guardar el resultado como CSV
+    dataframe.to_csv('datos_procesados.csv', index=False)
+print("Resultados guardados como 'datos_procesados.csv'.")
 
-# Llamar a la función con la URL proporcionada
-url_datos_proyecto = "https://huggingface.co/datasets/mstz/heart_failure/raw/main/heart_failure_clinical_records_dataset.csv"
-procesar_y_guardar_datos_proyecto(url_datos_proyecto)
+
+
+
 
