@@ -1,39 +1,61 @@
-# Importar las bibliotecas necesarias
-import pandas as pd
-import numpy as np
+import requests
+from io import StringIO
 
-# Definir una función llamada procesar_datos que toma un DataFrame como entrada
-def procesar_datos(dataframe):
-    # Verificar si hay valores faltantes en el DataFrame
-    if dataframe.isnull().values.any():
-        print("Existen valores faltantes en los datos.")
-        # Eliminar las filas con valores faltantes
-        dataframe.dropna(inplace=True)
+# URL del archivo CSV
+url = "https://huggingface.co/datasets/mstz/heart_failure/raw/main/heart_failure_clinical_records_dataset.csv"
+
+# Realizar la solicitud GET para obtener los datos
+response = requests.get(url)
+
+# ver si sirve
+if response.status_code == 200:
+    data = response.content.decode('utf-8')
+    df = pd.read_csv(StringIO(data))
+
+
+    print(df.head())
+else:
+    print("Error al descargar los datos:", response.status_code)
+
+import pandas as pd
+
+def procesar_dataframe(df):
+    # Verificar valores faltantes
+    if df.isnull().values.any():
+        print("Existen valores faltantes. Tratando de manejarlos...")
+        df = df.dropna()
         print("Valores faltantes eliminados.")
 
-    # Verificar si hay filas duplicadas en el DataFrame
-    if dataframe.duplicated().any():
-        print("Existen filas duplicadas en los datos.")
-        # Eliminar las filas duplicadas
-        dataframe.drop_duplicates(inplace=True)
+    # Verificar filas duplicadas
+    if df.duplicated().any():
+        print("Existen filas duplicadas. Tratando de manejarlas...")
+        df = df.drop_duplicates()
         print("Filas duplicadas eliminadas.")
 
-    # Verificar y eliminar valores atípicos usando el rango intercuartil (IQR)
-    q1 = dataframe.quantile(0.25)
-    q3 = dataframe.quantile(0.75)
-    iqr = q3 - q1
-    # Mantener solo las filas que no contienen valores atípicos
-    dataframe = dataframe[~((dataframe < (q1 - 1.5 * iqr)) | (dataframe > (q3 + 1.5 * iqr))).any(axis=1)]
-    print("Valores atípicos eliminados.")
+    # Verificar valores atípicos y eliminarlos
+    Q1 = df['age'].quantile(0.25)
+    Q3 = df['age'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
 
-    # Crear una nueva columna llamada 'Categoria Edades' basada en las edades de las personas
-    bins = [0, 12, 19, 39, 59, np.inf]
+    outliers = (df['age'] < lower_bound) | (df['age'] > upper_bound)
+    if outliers.any():
+        print("Existen valores atípicos. Tratando de manejarlos...")
+        df = df[~outliers]
+        print("Valores atípicos eliminados.")
+
+    # Crear columna de categorías por edades
+    bins = [0, 12, 19, 39, 59, float('inf')]
     labels = ['Niño', 'Adolescente', 'Jóvenes adulto', 'Adulto', 'Adulto mayor']
-    dataframe['Categoria Edades'] = pd.cut(dataframe['Edad'], bins=bins, labels=labels, right=False)
+    df['Categoria_Edad'] = pd.cut(df['age'], bins=bins, labels=labels, right=False)
 
-    # Guardar el DataFrame procesado como un nuevo archivo CSV llamado 'datos_procesados.csv'
-    dataframe.to_csv('datos_procesados.csv', index=False)
-print("Resultados guardados como 'datos_procesados.csv'.")
+    # Guardar el resultado como CSV
+    df.to_csv('resultado.csv', index=False)
+    print("Proceso completado. Resultado guardado como 'resultado.csv'.")
+
+
+procesar_dataframe(df)
 
 
 
