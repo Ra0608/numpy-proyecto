@@ -21,3 +21,6 @@ def descargar_y_guardar_csv(url, nombre_archivo):
 url_datos = "https://huggingface.co/datasets/mstz/heart_failure/raw/main/heart_failure_clinical_records_dataset.csv"
 nombre_archivo = "datos_descargados.csv"
 descargar_y_guardar_csv(url_datos, nombre_archivo)
+
+# Corregir la impresión
+print(descargar_y_guardar_csv)  # Esto debería ser print(descargar_y_guardar_csv(url_datos, nombre_archivo))
