@@ -1,5 +1,7 @@
 import requests
 from io import StringIO
+import pandas as pd
+
 
 # URL del archivo CSV
 url = "https://huggingface.co/datasets/mstz/heart_failure/raw/main/heart_failure_clinical_records_dataset.csv"
@@ -7,7 +9,7 @@ url = "https://huggingface.co/datasets/mstz/heart_failure/raw/main/heart_failure
 # Realizar la solicitud GET para obtener los datos
 response = requests.get(url)
 
-# ver si sirve
+# verificar respueste la respuesta es positiva o = 200 
 if response.status_code == 200:
     data = response.content.decode('utf-8')
     df = pd.read_csv(StringIO(data))
