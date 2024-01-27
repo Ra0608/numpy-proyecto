@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import numpy as np
+url = 'URL_de_tu_dataset_actualizado'
 
 def descargar_y_procesar_datos(url):
     try:
