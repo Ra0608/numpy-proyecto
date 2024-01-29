@@ -19,7 +19,6 @@ if response.status_code == 200:
 else:
     print("Error al descargar los datos:", response.status_code)
 
-import pandas as pd
 
 def procesar_dataframe(df):
     # Verificar valores faltantes
